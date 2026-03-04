@@ -10,5 +10,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/TronderLeikan.Domain.Tests/TronderLeikan.Domain.Tests.csproj" />
+    <Project Path="tests/TronderLeikan.Infrastructure.Tests/TronderLeikan.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="TronderLeikan.DbMigrator" />
+    <InternalsVisibleTo Include="TronderLeikan.Infrastructure.Tests" />
   </ItemGroup>
 
   <ItemGroup>
