@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TronderLeikan.API/TronderLeikan.API.csproj" />
+    <Project Path="src/TronderLeikan.AppHost/TronderLeikan.AppHost.csproj" />
+    <Project Path="src/TronderLeikan.Application/TronderLeikan.Application.csproj" />
+    <Project Path="src/TronderLeikan.Domain/TronderLeikan.Domain.csproj" />
+    <Project Path="src/TronderLeikan.Infrastructure/TronderLeikan.Infrastructure.csproj" />
+    <Project Path="src/TronderLeikan.ServiceDefaults/TronderLeikan.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TronderLeikan.Domain.Tests/TronderLeikan.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
