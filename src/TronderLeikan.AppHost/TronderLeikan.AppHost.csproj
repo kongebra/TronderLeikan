@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../TronderLeikan.API/TronderLeikan.API.csproj" />
+    <ProjectReference Include="../TronderLeikan.DbMigrator/TronderLeikan.DbMigrator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
