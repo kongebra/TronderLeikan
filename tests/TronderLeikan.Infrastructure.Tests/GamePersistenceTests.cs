@@ -13,7 +13,14 @@ public sealed class GamePersistenceTests : IAsyncLifetime
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine")
         .Build();
 
-    public async Task InitializeAsync() => await _postgres.StartAsync();
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        // Migrer skjemaet én gang for alle testene i klassen
+        await using var context = CreateContext();
+        await context.Database.MigrateAsync();
+    }
+
     public async Task DisposeAsync() => await _postgres.DisposeAsync();
 
     private AppDbContext CreateContext()
@@ -27,9 +34,7 @@ public sealed class GamePersistenceTests : IAsyncLifetime
     [Fact]
     public async Task Game_MedDeltakere_KanLagresOgHentes()
     {
-        // Migrer databasen
         await using var context = CreateContext();
-        await context.Database.MigrateAsync();
 
         // Opprett et spill med deltakere
         var tournamentId = Guid.NewGuid();
@@ -56,7 +61,6 @@ public sealed class GamePersistenceTests : IAsyncLifetime
     public async Task Game_Complete_LagrerPlasseringer()
     {
         await using var context = CreateContext();
-        await context.Database.MigrateAsync();
 
         var alice = Guid.NewGuid();
         var bob = Guid.NewGuid();
@@ -86,7 +90,6 @@ public sealed class GamePersistenceTests : IAsyncLifetime
     public async Task Tournament_MedPointRules_KanLagresOgHentes()
     {
         await using var context = CreateContext();
-        await context.Database.MigrateAsync();
 
         var tournament = Tournament.Create("Høst-leikan", "host-leikan");
         context.Tournaments.Add(tournament);

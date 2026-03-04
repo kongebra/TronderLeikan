@@ -22,37 +22,18 @@ internal sealed class GameConfiguration : IEntityTypeConfiguration<Game>
         // Game lagres med alle personlister som native PostgreSQL uuid[]-kolonner.
         // Backing fields er private List<Guid> i Game-entiteten.
         // Npgsql mapper List<Guid> automatisk til uuid[] i PostgreSQL.
-        // PropertyAccessMode.Field forteller EF Core å lese/skrive direkte mot feltet, ikke property.
+        void UuidArray(string felt, string kolonne) =>
+            builder.Property<List<Guid>>(felt)
+                .HasColumnName(kolonne)
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasDefaultValueSql("'{}'::uuid[]");
 
-        builder.Property<List<Guid>>("_participants")
-            .HasColumnName("Participants")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasDefaultValueSql("'{}'::uuid[]");
-
-        builder.Property<List<Guid>>("_organizers")
-            .HasColumnName("Organizers")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasDefaultValueSql("'{}'::uuid[]");
-
-        builder.Property<List<Guid>>("_spectators")
-            .HasColumnName("Spectators")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasDefaultValueSql("'{}'::uuid[]");
-
-        builder.Property<List<Guid>>("_firstPlace")
-            .HasColumnName("FirstPlace")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasDefaultValueSql("'{}'::uuid[]");
-
-        builder.Property<List<Guid>>("_secondPlace")
-            .HasColumnName("SecondPlace")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasDefaultValueSql("'{}'::uuid[]");
-
-        builder.Property<List<Guid>>("_thirdPlace")
-            .HasColumnName("ThirdPlace")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .HasDefaultValueSql("'{}'::uuid[]");
+        UuidArray("_participants", "Participants");
+        UuidArray("_organizers",   "Organizers");
+        UuidArray("_spectators",   "Spectators");
+        UuidArray("_firstPlace",   "FirstPlace");
+        UuidArray("_secondPlace",  "SecondPlace");
+        UuidArray("_thirdPlace",   "ThirdPlace");
 
         builder.ToTable("Games");
     }

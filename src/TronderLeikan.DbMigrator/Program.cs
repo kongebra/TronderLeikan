@@ -11,7 +11,8 @@ builder.AddServiceDefaults();
 // Npgsql-kobling via Aspire connection string "tronderleikan"
 builder.AddNpgsqlDbContext<AppDbContext>("tronderleikan");
 
-var host = builder.Build();
+using var host = builder.Build();
+await host.StartAsync();
 
 // Kjør alle ventende migrations mot databasen og avslutt
 await using var scope = host.Services.CreateAsyncScope();
@@ -19,3 +20,4 @@ var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 await db.Database.MigrateAsync();
 
 Console.WriteLine("Migrations fullfort.");
+await host.StopAsync();
