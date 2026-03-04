@@ -1,0 +1,22 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.2">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>958f9b6c-2131-47f5-aec4-b6d1bc739518</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../TronderLeikan.API/TronderLeikan.API.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.1.2" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
+    <PackageReference Include="Aspire.Hosting.Valkey" Version="13.1.2" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Bun" Version="13.1.1" />
+  </ItemGroup>
+
+</Project>
