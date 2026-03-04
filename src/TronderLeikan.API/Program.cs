@@ -1,8 +1,10 @@
+using TronderLeikan.Application.Common;
 using TronderLeikan.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.Services.AddApplication();
 builder.Services.AddOpenApi();
 
 // Kobling til PostgreSQL via Aspire — connection string hentes fra environment
