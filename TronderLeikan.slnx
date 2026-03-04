@@ -3,6 +3,7 @@
     <Project Path="src/TronderLeikan.API/TronderLeikan.API.csproj" />
     <Project Path="src/TronderLeikan.AppHost/TronderLeikan.AppHost.csproj" />
     <Project Path="src/TronderLeikan.Application/TronderLeikan.Application.csproj" />
+    <Project Path="src/TronderLeikan.DbMigrator/TronderLeikan.DbMigrator.csproj" />
     <Project Path="src/TronderLeikan.Domain/TronderLeikan.Domain.csproj" />
     <Project Path="src/TronderLeikan.Infrastructure/TronderLeikan.Infrastructure.csproj" />
     <Project Path="src/TronderLeikan.ServiceDefaults/TronderLeikan.ServiceDefaults.csproj" />
