@@ -33,21 +33,19 @@ internal static class ZitadelExtensions
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_DATABASE", "zitadel")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_USERNAME", "postgres")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_SSL_MODE", "disable")
+            // Passord refereres direkte via ParameterResource-overload — resolves korrekt av Aspire
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_PASSWORD", postgresServer.PasswordParameter)
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_USERNAME", "zitadel")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_PASSWORD", "zitadel")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_SSL_MODE", "disable")
             .WithEnvironment(ctx =>
             {
-                // PostgreSQL-tilkoblingsinformasjon resolves av Aspire ved runtime
+                // Host og port resolves av Aspire via EndpointProperty ved runtime
                 var ep = postgresServer.PrimaryEndpoint;
                 ctx.EnvironmentVariables["ZITADEL_DATABASE_POSTGRES_HOST"] =
                     ep.Property(EndpointProperty.Host);
                 ctx.EnvironmentVariables["ZITADEL_DATABASE_POSTGRES_PORT"] =
                     ep.Property(EndpointProperty.Port);
-
-                // Admin-passord genereres automatisk av Aspire og refereres via ParameterResource
-                ctx.EnvironmentVariables["ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_PASSWORD"] =
-                    postgresServer.PasswordParameter;
             })
             // Bootstrap-mappe for initial admin PAT (Personal Access Token)
             .WithBindMount("./zitadel-bootstrap", "/app/bootstrap")
