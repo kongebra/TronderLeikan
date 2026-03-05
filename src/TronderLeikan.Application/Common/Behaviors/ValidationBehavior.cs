@@ -25,8 +25,9 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
         if (failures.Count == 0)
             return await next();
 
+        // Bruk feilkoden fra første brudd — gir domenespesifikk feilkode i respons
         var error = Error.Validation(
-            code: "Validation.Failed",
+            code: failures[0].ErrorCode ?? "Validation.Failed",
             description: string.Join("; ", failures.Select(f => f.ErrorMessage)));
 
         // dynamic løser implicit operator (Error → Result / Result<T>) ved runtime

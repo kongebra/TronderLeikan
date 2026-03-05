@@ -16,28 +16,16 @@ using TronderLeikan.Application.Games.Responses;
 
 namespace TronderLeikan.API.Controllers;
 
-public sealed class GamesController(
-    ICommandHandler<CreateGameCommand, Guid> createHandler,
-    ICommandHandler<UpdateGameCommand> updateHandler,
-    ICommandHandler<AddParticipantCommand> addParticipantHandler,
-    ICommandHandler<AddOrganizerCommand> addOrganizerHandler,
-    ICommandHandler<AddSpectatorCommand> addSpectatorHandler,
-    ICommandHandler<CompleteGameCommand> completeHandler,
-    ICommandHandler<UploadGameBannerCommand> uploadBannerHandler,
-    ICommandHandler<RegisterSimracingResultCommand, Guid> registerSimracingHandler,
-    ICommandHandler<CompleteSimracingGameCommand> completeSimracingHandler,
-    IQueryHandler<GetGameByIdQuery, GameDetailResponse> getByIdHandler,
-    IQueryHandler<GetSimracingResultsQuery, SimracingResultResponse[]> getSimracingHandler)
-    : ApiControllerBase
+public sealed class GamesController(ISender sender) : ApiControllerBase
 {
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<GameDetailResponse>> GetById(Guid id, CancellationToken ct) =>
-        (await getByIdHandler.Handle(new GetGameByIdQuery(id), ct)).Match(Ok, Problem);
+        (await sender.Query(new GetGameByIdQuery(id), ct)).Match(Ok, Problem);
 
     [HttpPost]
     public async Task<ActionResult<Guid>> Create(CreateGameCommand command, CancellationToken ct)
     {
-        var result = await createHandler.Handle(command, ct);
+        var result = await sender.Send(command, ct);
         return result.Match(
             id => CreatedAtAction(nameof(GetById), new { id }, id),
             Problem);
@@ -45,42 +33,42 @@ public sealed class GamesController(
 
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> Update(Guid id, UpdateGameCommand command, CancellationToken ct) =>
-        (await updateHandler.Handle(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
+        (await sender.Send(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
 
     [HttpPost("{id:guid}/participants")]
     public async Task<ActionResult> AddParticipant(Guid id, AddParticipantCommand command, CancellationToken ct) =>
-        (await addParticipantHandler.Handle(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
+        (await sender.Send(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
 
     [HttpPost("{id:guid}/organizers")]
     public async Task<ActionResult> AddOrganizer(Guid id, AddOrganizerCommand command, CancellationToken ct) =>
-        (await addOrganizerHandler.Handle(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
+        (await sender.Send(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
 
     [HttpPost("{id:guid}/spectators")]
     public async Task<ActionResult> AddSpectator(Guid id, AddSpectatorCommand command, CancellationToken ct) =>
-        (await addSpectatorHandler.Handle(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
+        (await sender.Send(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
 
     [HttpPost("{id:guid}/complete")]
     public async Task<ActionResult> Complete(Guid id, CompleteGameCommand command, CancellationToken ct) =>
-        (await completeHandler.Handle(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
+        (await sender.Send(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
 
     // Banner-opplasting
     [HttpPut("{id:guid}/banner")]
     public async Task<ActionResult> UploadBanner(Guid id, IFormFile banner, CancellationToken ct)
     {
         await using var ms = await ToMemoryStreamAsync(banner, ct);
-        var result = await uploadBannerHandler.Handle(new UploadGameBannerCommand(id, ms), ct);
+        var result = await sender.Send(new UploadGameBannerCommand(id, ms), ct);
         return result.Match<ActionResult>(() => NoContent(), Problem);
     }
 
     [HttpGet("{id:guid}/simracing-results")]
     public async Task<ActionResult<SimracingResultResponse[]>> GetSimracingResults(Guid id, CancellationToken ct) =>
-        (await getSimracingHandler.Handle(new GetSimracingResultsQuery(id), ct)).Match(Ok, Problem);
+        (await sender.Query(new GetSimracingResultsQuery(id), ct)).Match(Ok, Problem);
 
     [HttpPost("{id:guid}/simracing-results")]
     public async Task<ActionResult<Guid>> RegisterSimracingResult(
         Guid id, RegisterSimracingResultCommand command, CancellationToken ct)
     {
-        var result = await registerSimracingHandler.Handle(command with { GameId = id }, ct);
+        var result = await sender.Send(command with { GameId = id }, ct);
         return result.Match(
             resultId => CreatedAtAction(nameof(GetSimracingResults), new { id }, resultId),
             Problem);
@@ -88,6 +76,6 @@ public sealed class GamesController(
 
     [HttpPost("{id:guid}/simracing-results/complete")]
     public async Task<ActionResult> CompleteSimracing(Guid id, CancellationToken ct) =>
-        (await completeSimracingHandler.Handle(new CompleteSimracingGameCommand(id), ct))
+        (await sender.Send(new CompleteSimracingGameCommand(id), ct))
             .Match<ActionResult>(() => NoContent(), Problem);
 }

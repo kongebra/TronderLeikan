@@ -19,6 +19,10 @@ internal sealed class HandlerRegistrationValidator(IServiceProvider sp) : IStart
     {
         var assembly = typeof(IAppDbContext).Assembly;
 
+        // Bruk et scope slik at scoped tjenester kan løses uten feil fra root-provider
+        using var scope = sp.CreateScope();
+        var scopedSp = scope.ServiceProvider;
+
         foreach (var type in assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract))
         {
             foreach (var iface in type.GetInterfaces())
@@ -38,7 +42,7 @@ internal sealed class HandlerRegistrationValidator(IServiceProvider sp) : IStart
 
                 if (handlerType is null) continue;
 
-                if (sp.GetService(handlerType) is null)
+                if (scopedSp.GetService(handlerType) is null)
                     throw new InvalidOperationException(
                         $"Mangler handler-registrering for '{type.Name}'. " +
                         $"Forventet: {handlerType.Name}");
@@ -48,7 +52,7 @@ internal sealed class HandlerRegistrationValidator(IServiceProvider sp) : IStart
             if (type.GetInterfaces().Any(i => i == typeof(ICommand)))
             {
                 var handlerType = typeof(ICommandHandler<>).MakeGenericType(type);
-                if (sp.GetService(handlerType) is null)
+                if (scopedSp.GetService(handlerType) is null)
                     throw new InvalidOperationException(
                         $"Mangler handler-registrering for '{type.Name}'. " +
                         $"Forventet: ICommandHandler<{type.Name}>");
