@@ -5,6 +5,7 @@ using TronderLeikan.Domain.Departments;
 using TronderLeikan.Domain.Games;
 using TronderLeikan.Domain.Persons;
 using TronderLeikan.Domain.Tournaments;
+using TronderLeikan.Infrastructure.Persistence.Outbox;
 
 namespace TronderLeikan.Infrastructure.Persistence;
 
@@ -19,6 +20,9 @@ internal sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SimracingResult> SimracingResults => Set<SimracingResult>();
     public DbSet<PersonImage> PersonImages => Set<PersonImage>();
     public DbSet<GameBanner> GameBanners => Set<GameBanner>();
+    public DbSet<EventStoreEntry> EventStore => Set<EventStoreEntry>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<ProcessedEvent> ProcessedEvents => Set<ProcessedEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
