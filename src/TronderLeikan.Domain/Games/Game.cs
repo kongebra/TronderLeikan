@@ -17,6 +17,7 @@ public sealed class Game : Entity
     public Guid TournamentId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
+    public string? Location { get; private set; }
     public bool IsDone { get; private set; }
     public GameType GameType { get; private set; }
     public bool IsOrganizersParticipating { get; private set; }
@@ -77,4 +78,5 @@ public sealed class Game : Entity
     public void SetBanner() => HasBanner = true;
     public void RemoveBanner() => HasBanner = false;
     public void UpdateDescription(string? description) => Description = description;
+    public void UpdateLocation(string? location) => Location = location;
 }

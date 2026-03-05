@@ -12,6 +12,7 @@ internal sealed class GameConfiguration : IEntityTypeConfiguration<Game>
         builder.Property(g => g.TournamentId).IsRequired();
         builder.Property(g => g.Name).IsRequired().HasMaxLength(500);
         builder.Property(g => g.Description).HasMaxLength(5000);
+        builder.Property(g => g.Location).HasMaxLength(500);
         builder.Property(g => g.IsDone);
         builder.Property(g => g.GameType);
         builder.Property(g => g.IsOrganizersParticipating);
