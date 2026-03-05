@@ -73,6 +73,7 @@ public sealed class Game : Entity
         AddDomainEvent(new GameCompletedEvent(Id));
     }
 
+    public void UpdateName(string name) => Name = name;
     public void SetBanner() => HasBanner = true;
     public void RemoveBanner() => HasBanner = false;
     public void UpdateDescription(string? description) => Description = description;

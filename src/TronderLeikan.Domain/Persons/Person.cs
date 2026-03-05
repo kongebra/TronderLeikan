@@ -20,6 +20,12 @@ public sealed class Person : Entity
             DepartmentId = departmentId
         };
 
+    public void Update(string firstName, string lastName)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+    }
+
     public void SetProfileImage() => HasProfileImage = true;
     public void RemoveProfileImage() => HasProfileImage = false;
     public void UpdateDepartment(Guid? departmentId) => DepartmentId = departmentId;
