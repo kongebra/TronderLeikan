@@ -5,6 +5,9 @@ using TronderLeikan.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.Services.AddOpenTelemetry()
+    .WithTracing(t => t.AddSource("TronderLeikan.Sender"))
+    .WithMetrics(m => m.AddMeter("TronderLeikan.Sender"));
 builder.Services.AddApplication();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
