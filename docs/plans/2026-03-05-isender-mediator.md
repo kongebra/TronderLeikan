@@ -1,7 +1,5 @@
 # ISender — egendefinert mediator med pipeline
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Erstatt N `ICommandHandler`/`IQueryHandler` constructor-parametre i controllers med én `ISender`, og legg til automatisk validering og observabilitet via pipeline-behaviors.
 
 **Architecture:** `ISender` løser opp handlers via `IServiceProvider.MakeGenericType` og kjører dem gjennom en chain av `IPipelineBehavior<TRequest, TResponse>`. Marker interfaces (`ICommand<T>`, `ICommand`, `IQuery<T>`) gir type-inferens. `ObservabilityBehavior` og `ValidationBehavior` registreres som åpne generics via Scrutor og plukkes opp automatisk for alle fremtidige commands/queries.

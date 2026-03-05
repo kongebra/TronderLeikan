@@ -38,7 +38,7 @@ public sealed class ObservabilityBehaviorTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_FailureResult_SeterFeilstatus()
+    public async Task Handle_FailureResult_SetterFeilstatus()
     {
         var behavior = new ObservabilityBehavior<TestQuery, Result<string>>();
         var error = Error.NotFound("Test.NotFound", "Ikke funnet");
