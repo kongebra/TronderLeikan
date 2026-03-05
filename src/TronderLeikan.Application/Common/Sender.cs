@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.DependencyInjection;
 using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
@@ -51,16 +52,29 @@ internal sealed class Sender(IServiceProvider sp) : ISender
 
         // Bygg pipeline — ytterste behavior kjøres først (ObservabilityBehavior → ValidationBehavior → handler)
         var handleMethod = HandlerMethodCache.GetOrAdd(handlerType, t => t.GetMethod("Handle")!);
-        Func<Task<TResponse>> pipeline = () =>
-            (Task<TResponse>)handleMethod.Invoke(handler, [request, ct])!;
+        Func<Task<TResponse>> pipeline = () => Invoke<TResponse>(handleMethod, handler, [request, ct]);
 
         foreach (var behavior in Enumerable.Reverse(behaviors))
         {
             var inner = pipeline;
             var behaviorMethod = BehaviorMethodCache.GetOrAdd(behavior.GetType(), t => t.GetMethod("Handle")!);
-            pipeline = () => (Task<TResponse>)behaviorMethod.Invoke(behavior, [request, inner, ct])!;
+            pipeline = () => Invoke<TResponse>(behaviorMethod, behavior, [request, inner, ct]);
         }
 
         return await pipeline();
+    }
+
+    // Pakker ut TargetInvocationException slik at opprinnelig exception og stack trace bevares
+    private static Task<TResponse> Invoke<TResponse>(MethodInfo method, object instance, object[] args)
+    {
+        try
+        {
+            return (Task<TResponse>)method.Invoke(instance, args)!;
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw; // utilgjengelig — tilfredsstiller kompilatoren
+        }
     }
 }

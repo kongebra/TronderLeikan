@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using TronderLeikan.Application.Common.Behaviors;
 using TronderLeikan.Application.Common.Errors;
@@ -7,7 +8,8 @@ namespace TronderLeikan.Application.Tests.Common.Behaviors;
 
 public sealed class ObservabilityBehaviorTests : IDisposable
 {
-    private readonly List<Activity> _recordedActivities = [];
+    // ConcurrentBag — ActivityStopped kan kalles fra ulike tråder
+    private readonly ConcurrentBag<Activity> _recordedActivities = new();
     private readonly ActivityListener _listener;
 
     public ObservabilityBehaviorTests()
@@ -33,8 +35,8 @@ public sealed class ObservabilityBehaviorTests : IDisposable
             () => Task.FromResult<Result<string>>("treff"),
             CancellationToken.None);
 
-        _recordedActivities.Should().ContainSingle(a => a.DisplayName == "TestQuery");
-        _recordedActivities[0].Status.Should().Be(ActivityStatusCode.Unset);
+        var activity = _recordedActivities.Should().ContainSingle(a => a.DisplayName == "TestQuery").Which;
+        activity.Status.Should().Be(ActivityStatusCode.Unset);
     }
 
     [Fact]
@@ -48,9 +50,9 @@ public sealed class ObservabilityBehaviorTests : IDisposable
             () => Task.FromResult<Result<string>>(error),
             CancellationToken.None);
 
-        _recordedActivities.Should().ContainSingle();
-        _recordedActivities[0].Status.Should().Be(ActivityStatusCode.Error);
-        _recordedActivities[0].GetTagItem("sender.error").Should().Be("Test.NotFound");
+        var activity = _recordedActivities.Should().ContainSingle().Which;
+        activity.Status.Should().Be(ActivityStatusCode.Error);
+        activity.GetTagItem("sender.error").Should().Be("Test.NotFound");
     }
 
     public void Dispose() => _listener.Dispose();

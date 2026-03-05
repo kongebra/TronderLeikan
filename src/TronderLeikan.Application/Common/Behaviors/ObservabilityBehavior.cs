@@ -56,6 +56,15 @@ public sealed class ObservabilityBehavior<TRequest, TResponse>
                 activity?.SetTag("sender.error", errorCode);
             }
 
+            // Registrer exception-detaljer på span i henhold til OTel semantiske konvensjoner
+            if (isException)
+                activity?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+                {
+                    { "exception.type",       caughtException!.GetType().FullName },
+                    { "exception.message",    caughtException!.Message },
+                    { "exception.stacktrace", caughtException!.ToString() }
+                }));
+
             var tags = new TagList
             {
                 { "request.type",   name },
