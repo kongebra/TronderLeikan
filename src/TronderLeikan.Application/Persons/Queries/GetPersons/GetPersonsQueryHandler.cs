@@ -14,6 +14,6 @@ public sealed class GetPersonsQueryHandler(IAppDbContext db)
             .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
             .Select(p => new PersonSummaryResponse(p.Id, p.FirstName, p.LastName, p.DepartmentId, p.HasProfileImage))
             .ToArrayAsync(ct);
-        return Result<PersonSummaryResponse[]>.Ok(persons);
+        return persons;
     }
 }

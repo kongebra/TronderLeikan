@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 
@@ -10,8 +11,8 @@ public sealed class CompleteSimracingGameCommandHandler(IAppDbContext db)
     public async Task<Result> Handle(CompleteSimracingGameCommand command, CancellationToken ct = default)
     {
         var game = await db.Games.FindAsync([command.GameId], ct);
-        if (game is null) return Result.Fail($"Spill {command.GameId} finnes ikke.");
-        if (game.IsDone) return Result.Fail("Spillet er allerede fullført.");
+        if (game is null) return GameErrors.NotFound;
+        if (game.IsDone) return GameErrors.AlreadyCompleted;
 
         var results = await db.SimracingResults
             .Where(r => r.GameId == command.GameId)
@@ -19,7 +20,7 @@ public sealed class CompleteSimracingGameCommandHandler(IAppDbContext db)
             .ToListAsync(ct);
 
         if (results.Count == 0)
-            return Result.Fail("Ingen racetider registrert for dette spillet.");
+            return GameErrors.NoSimracingResults;
 
         // Grupper like tider — deler plassering (ties)
         var groups = results.GroupBy(r => r.RaceTimeMs).OrderBy(g => g.Key).ToList();
@@ -30,6 +31,6 @@ public sealed class CompleteSimracingGameCommandHandler(IAppDbContext db)
 
         game.Complete(firstPlace, secondPlace, thirdPlace);
         await db.SaveChangesAsync(ct);
-        return Result.Ok();
+        return Result.Success();
     }
 }

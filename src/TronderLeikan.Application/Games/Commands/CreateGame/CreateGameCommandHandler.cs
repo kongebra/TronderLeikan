@@ -12,6 +12,6 @@ public sealed class CreateGameCommandHandler(IAppDbContext db)
         var game = Game.Create(command.Name, command.TournamentId, command.GameType);
         db.Games.Add(game);
         await db.SaveChangesAsync(ct);
-        return Result<Guid>.Ok(game.Id);
+        return game.Id;
     }
 }

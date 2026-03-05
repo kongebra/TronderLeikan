@@ -1,3 +1,4 @@
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 
@@ -9,9 +10,9 @@ public sealed class AddOrganizerCommandHandler(IAppDbContext db)
     public async Task<Result> Handle(AddOrganizerCommand command, CancellationToken ct = default)
     {
         var game = await db.Games.FindAsync([command.GameId], ct);
-        if (game is null) return Result.Fail($"Spill {command.GameId} finnes ikke.");
+        if (game is null) return GameErrors.NotFound;
         game.AddOrganizer(command.PersonId, command.WithParticipation);
         await db.SaveChangesAsync(ct);
-        return Result.Ok();
+        return Result.Success();
     }
 }
