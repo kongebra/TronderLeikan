@@ -1,3 +1,4 @@
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 
@@ -9,10 +10,9 @@ public sealed class DeletePersonCommandHandler(IAppDbContext db)
     public async Task<Result> Handle(DeletePersonCommand command, CancellationToken ct = default)
     {
         var person = await db.Persons.FindAsync([command.PersonId], ct);
-        if (person is null)
-            return Result.Fail($"Person med Id {command.PersonId} finnes ikke.");
+        if (person is null) return PersonErrors.NotFound;
         db.Persons.Remove(person);
         await db.SaveChangesAsync(ct);
-        return Result.Ok();
+        return Result.Success();
     }
 }

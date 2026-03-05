@@ -1,3 +1,4 @@
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 using TronderLeikan.Domain.Tournaments;
@@ -11,13 +12,13 @@ public sealed class UpdateTournamentPointRulesCommandHandler(IAppDbContext db)
     {
         var tournament = await db.Tournaments.FindAsync([command.TournamentId], ct);
         if (tournament is null)
-            return Result.Fail($"Turnering med Id {command.TournamentId} finnes ikke.");
+            return TournamentErrors.NotFound;
 
         tournament.UpdatePointRules(TournamentPointRules.Custom(
             command.Participation, command.FirstPlace, command.SecondPlace, command.ThirdPlace,
             command.OrganizedWithParticipation, command.OrganizedWithoutParticipation, command.Spectator));
 
         await db.SaveChangesAsync(ct);
-        return Result.Ok();
+        return Result.Success();
     }
 }

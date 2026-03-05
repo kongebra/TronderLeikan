@@ -12,6 +12,6 @@ public sealed class CreateTournamentCommandHandler(IAppDbContext db)
         var tournament = Tournament.Create(command.Name, command.Slug);
         db.Tournaments.Add(tournament);
         await db.SaveChangesAsync(ct);
-        return Result<Guid>.Ok(tournament.Id);
+        return tournament.Id;
     }
 }

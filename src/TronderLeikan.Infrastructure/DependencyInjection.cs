@@ -28,4 +28,15 @@ public static class DependencyInjection
 
         return services;
     }
+
+    /// <summary>
+    /// Kjører EF Core-migrasjoner via IServiceProvider — brukes av testinfrastruktur
+    /// uten å eksponere den interne AppDbContext-typen direkte.
+    /// </summary>
+    public static async Task MigrateDatabaseAsync(this IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+    }
 }

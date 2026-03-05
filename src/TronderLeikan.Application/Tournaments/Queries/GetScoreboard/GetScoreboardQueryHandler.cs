@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 using TronderLeikan.Application.Tournaments.Responses;
@@ -12,7 +13,7 @@ public sealed class GetScoreboardQueryHandler(IAppDbContext db)
     {
         var tournament = await db.Tournaments.FindAsync([query.TournamentId], ct);
         if (tournament is null)
-            return Result<ScoreboardEntryResponse[]>.Fail($"Turnering med Id {query.TournamentId} finnes ikke.");
+            return TournamentErrors.NotFound;
 
         var rules = tournament.PointRules;
 
@@ -73,6 +74,6 @@ public sealed class GetScoreboardQueryHandler(IAppDbContext db)
             entries.Add(new ScoreboardEntryResponse(personId, person.FirstName, person.LastName, sorted[i].Value, rank));
         }
 
-        return Result<ScoreboardEntryResponse[]>.Ok([.. entries]);
+        return entries.ToArray();
     }
 }

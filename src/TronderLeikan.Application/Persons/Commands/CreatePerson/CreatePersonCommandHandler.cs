@@ -12,6 +12,6 @@ public sealed class CreatePersonCommandHandler(IAppDbContext db)
         var person = Person.Create(command.FirstName, command.LastName, command.DepartmentId);
         db.Persons.Add(person);
         await db.SaveChangesAsync(ct);
-        return Result<Guid>.Ok(person.Id);
+        return person.Id;
     }
 }

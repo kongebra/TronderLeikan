@@ -1,3 +1,4 @@
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 using TronderLeikan.Application.Games.Responses;
@@ -10,11 +11,11 @@ public sealed class GetGameByIdQueryHandler(IAppDbContext db)
     public async Task<Result<GameDetailResponse>> Handle(GetGameByIdQuery query, CancellationToken ct = default)
     {
         var game = await db.Games.FindAsync([query.GameId], ct);
-        if (game is null) return Result<GameDetailResponse>.Fail($"Spill {query.GameId} finnes ikke.");
-        return Result<GameDetailResponse>.Ok(new GameDetailResponse(
+        if (game is null) return GameErrors.NotFound;
+        return new GameDetailResponse(
             game.Id, game.TournamentId, game.Name, game.Description,
             game.IsDone, game.GameType, game.HasBanner, game.IsOrganizersParticipating,
             game.Participants, game.Organizers, game.Spectators,
-            game.FirstPlace, game.SecondPlace, game.ThirdPlace));
+            game.FirstPlace, game.SecondPlace, game.ThirdPlace);
     }
 }

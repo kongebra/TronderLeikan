@@ -15,6 +15,6 @@ public sealed class GetSimracingResultsQueryHandler(IAppDbContext db)
             .OrderBy(r => r.RaceTimeMs)
             .Select(r => new SimracingResultResponse(r.Id, r.PersonId, r.RaceTimeMs))
             .ToArrayAsync(ct);
-        return Result<SimracingResultResponse[]>.Ok(results);
+        return results;
     }
 }

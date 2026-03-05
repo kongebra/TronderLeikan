@@ -14,6 +14,6 @@ public sealed class GetDepartmentsQueryHandler(IAppDbContext db)
             .OrderBy(d => d.Name)
             .Select(d => new DepartmentResponse(d.Id, d.Name))
             .ToArrayAsync(ct);
-        return Result<DepartmentResponse[]>.Ok(departments);
+        return departments;
     }
 }

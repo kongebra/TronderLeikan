@@ -14,6 +14,6 @@ public sealed class GetTournamentsQueryHandler(IAppDbContext db)
             .OrderBy(t => t.Name)
             .Select(t => new TournamentSummaryResponse(t.Id, t.Name, t.Slug))
             .ToArrayAsync(ct);
-        return Result<TournamentSummaryResponse[]>.Ok(tournaments);
+        return tournaments;
     }
 }

@@ -1,3 +1,4 @@
+using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
 using TronderLeikan.Application.Common.Results;
 using TronderLeikan.Application.Persistence.Images;
@@ -10,7 +11,7 @@ public sealed class UploadGameBannerCommandHandler(IAppDbContext db, IImageProce
     public async Task<Result> Handle(UploadGameBannerCommand command, CancellationToken ct = default)
     {
         var game = await db.Games.FindAsync([command.GameId], ct);
-        if (game is null) return Result.Fail($"Spill {command.GameId} finnes ikke.");
+        if (game is null) return GameErrors.NotFound;
 
         var bytes = await imageProcessor.ProcessGameBannerAsync(command.BannerStream, ct);
 
@@ -31,6 +32,6 @@ public sealed class UploadGameBannerCommandHandler(IAppDbContext db, IImageProce
 
         game.SetBanner();
         await db.SaveChangesAsync(ct);
-        return Result.Ok();
+        return Result.Success();
     }
 }
