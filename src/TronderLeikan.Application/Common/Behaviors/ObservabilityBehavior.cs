@@ -63,7 +63,7 @@ public sealed class ObservabilityBehavior<TRequest, TResponse>
                 {
                     { "exception.type",       caughtException!.GetType().FullName },
                     { "exception.message",    caughtException!.Message },
-                    { "exception.stacktrace", caughtException!.ToString() }
+                    { "exception.stacktrace", caughtException!.StackTrace ?? string.Empty }
                 }));
 
             var resultLabel = isCancelled ? "cancelled" : isFailure ? "failure" : "success";

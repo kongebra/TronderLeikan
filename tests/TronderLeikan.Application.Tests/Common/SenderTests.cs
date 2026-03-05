@@ -114,25 +114,13 @@ public sealed class SenderTests
         {
             s.AddScoped<ICommandHandler<FakeCommand, string>, FakeCommandHandler>();
             // Første registrert = ytterst = kjøres først
-            s.AddScoped(
-                typeof(IPipelineBehavior<,>),
-                typeof(TrackingBehavior<,>));
             s.AddScoped<IPipelineBehavior<FakeCommand, Result<string>>>(
                 _ => new TrackingBehavior<FakeCommand, Result<string>>("første", log));
             s.AddScoped<IPipelineBehavior<FakeCommand, Result<string>>>(
                 _ => new TrackingBehavior<FakeCommand, Result<string>>("andre", log));
         });
 
-        // Bruker direkte Dispatch via sender-instans — registrerer bare det vi trenger
-        var services = new ServiceCollection();
-        services.AddScoped<ICommandHandler<FakeCommand, string>, FakeCommandHandler>();
-        services.AddScoped<IPipelineBehavior<FakeCommand, Result<string>>>(
-            _ => new TrackingBehavior<FakeCommand, Result<string>>("første", log));
-        services.AddScoped<IPipelineBehavior<FakeCommand, Result<string>>>(
-            _ => new TrackingBehavior<FakeCommand, Result<string>>("andre", log));
-
-        var s2 = new Sender(services.BuildServiceProvider());
-        await s2.Send(new FakeCommand());
+        await sender.Send(new FakeCommand());
 
         log.Should().Equal("første", "andre");
     }
