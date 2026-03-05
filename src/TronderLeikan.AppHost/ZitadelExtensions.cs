@@ -12,7 +12,8 @@ internal static class ZitadelExtensions
     internal static IResourceBuilder<ContainerResource> AddZitadel(
         this IDistributedApplicationBuilder builder,
         string name,
-        IResourceBuilder<PostgresDatabaseResource> database)
+        IResourceBuilder<PostgresDatabaseResource> database,
+        IResourceBuilder<ParameterResource> postgresAdminPassword)
     {
         // Masterkey hentes fra user secrets — må være nøyaktig 32 tegn
         var masterKey = builder.Configuration["Zitadel:MasterKey"]
@@ -33,8 +34,8 @@ internal static class ZitadelExtensions
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_DATABASE", "zitadel")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_USERNAME", "postgres")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_SSL_MODE", "disable")
-            // Passord refereres direkte via ParameterResource-overload — resolves korrekt av Aspire
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_PASSWORD", postgresServer.PasswordParameter)
+            // IResourceBuilder<ParameterResource>-overload sikrer korrekt runtime-resolving av passordet
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_PASSWORD", postgresAdminPassword)
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_USERNAME", "zitadel")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_PASSWORD", "zitadel")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_SSL_MODE", "disable")
