@@ -42,8 +42,9 @@ public sealed class ObservabilityBehavior<TRequest, TResponse>
         {
             sw.Stop();
 
-            // Ved ukontrollert exception — merk span og teller som feil
-            var isException = caughtException is not null;
+            // Kansellering er ikke en feil — registreres separat uten Error-status på span
+            var isCancelled = caughtException is OperationCanceledException && ct.IsCancellationRequested;
+            var isException = caughtException is not null && !isCancelled;
             var resultInterface = response as IResult;
             var isFailure = isException || resultInterface is { IsSuccess: false };
             var errorCode = isException
@@ -56,7 +57,7 @@ public sealed class ObservabilityBehavior<TRequest, TResponse>
                 activity?.SetTag("sender.error", errorCode);
             }
 
-            // Registrer exception-detaljer på span i henhold til OTel semantiske konvensjoner
+            // Registrer exception-detaljer på span i henhold til OTel semantiske konvensjoner (kun ved feil, ikke kansellering)
             if (isException)
                 activity?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
                 {
@@ -65,10 +66,11 @@ public sealed class ObservabilityBehavior<TRequest, TResponse>
                     { "exception.stacktrace", caughtException!.ToString() }
                 }));
 
+            var resultLabel = isCancelled ? "cancelled" : isFailure ? "failure" : "success";
             var tags = new TagList
             {
                 { "request.type",   name },
-                { "request.result", isFailure ? "failure" : "success" }
+                { "request.result", resultLabel }
             };
             if (errorCode is not null)
                 tags.Add("request.error_code", errorCode);

@@ -10,6 +10,8 @@ public sealed class CreateDepartmentCommandValidator : AbstractValidator<CreateD
             .NotEmpty()
                 .WithErrorCode("Department.NameEmpty")
                 .WithMessage("Avdelingsnavn kan ikke være tomt.")
-            .MaximumLength(200);
+            .MaximumLength(200)
+                .WithErrorCode("Department.NameTooLong")
+                .WithMessage("Avdelingsnavn kan ikke være lengre enn 200 tegn.");
     }
 }

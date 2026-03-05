@@ -36,24 +36,28 @@ internal sealed class Sender(IServiceProvider sp) : ISender
     {
         var handler = sp.GetService(handlerType);
 
-        // Graceful fallback — returnerer strukturert feil i stedet for ukontrollert exception
+        // Hent behaviors for konkret request-type og response-type
+        var behaviorType = typeof(IPipelineBehavior<,>)
+            .MakeGenericType(request.GetType(), typeof(TResponse));
+        var behaviors = sp.GetServices(behaviorType).OfType<object>().ToList();
+
+        // Bygg innerste ledd i pipeline — manglende handler returneres som strukturert feil
+        // slik at ObservabilityBehavior m.fl. fanger opp feilen og registrerer trace/metrics
+        Func<Task<TResponse>> pipeline;
         if (handler is null)
         {
             var error = Error.Unexpected(
                 "Sender.HandlerNotFound",
                 $"Ingen handler registrert for '{request.GetType().Name}'.");
-            return (TResponse)(dynamic)error;
+            pipeline = () => Task.FromResult((TResponse)(dynamic)error);
+        }
+        else
+        {
+            var handleMethod = HandlerMethodCache.GetOrAdd(handlerType, t => t.GetMethod("Handle")!);
+            pipeline = () => Invoke<TResponse>(handleMethod, handler, [request, ct]);
         }
 
-        // Hent behaviors for konkret request-type og response-type
-        var behaviorType = typeof(IPipelineBehavior<,>)
-            .MakeGenericType(request.GetType(), typeof(TResponse));
-        var behaviors = sp.GetServices(behaviorType).ToList();
-
-        // Bygg pipeline — ytterste behavior kjøres først (ObservabilityBehavior → ValidationBehavior → handler)
-        var handleMethod = HandlerMethodCache.GetOrAdd(handlerType, t => t.GetMethod("Handle")!);
-        Func<Task<TResponse>> pipeline = () => Invoke<TResponse>(handleMethod, handler, [request, ct]);
-
+        // Pakk inn behaviors — ytterste behavior kjøres først (ObservabilityBehavior → ValidationBehavior → handler/feil)
         foreach (var behavior in Enumerable.Reverse(behaviors))
         {
             var inner = pipeline;
