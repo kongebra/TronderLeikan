@@ -1,0 +1,19 @@
+http:
+  routers:
+    zitadel-login-router:
+      rule: "PathPrefix(`/ui/v2`)"
+      service: zitadel-login-service
+      priority: 10
+    zitadel-api-router:
+      rule: "PathPrefix(`/`)"
+      service: zitadel-api-service
+      priority: 1
+  services:
+    zitadel-login-service:
+      loadBalancer:
+        servers:
+          - url: "{{ env \"ZITADEL_LOGIN_INTERNAL_URL\" }}"
+    zitadel-api-service:
+      loadBalancer:
+        servers:
+          - url: "{{ env \"ZITADEL_API_INTERNAL_URL\" }}"
