@@ -3,7 +3,14 @@ using TronderLeikan.Application.Common.Errors;
 
 namespace TronderLeikan.Application.Common.Results;
 
-public class Result
+// Felles interface slik at ObservabilityBehavior kan inspisere suksess/feil uten å kjenne konkret type
+public interface IResult
+{
+    bool IsSuccess { get; }
+    Error? Error { get; }
+}
+
+public class Result : IResult
 {
     public bool IsSuccess { get; }
     public Error? Error { get; }
