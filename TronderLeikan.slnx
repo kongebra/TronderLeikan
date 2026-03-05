@@ -9,6 +9,7 @@
     <Project Path="src/TronderLeikan.ServiceDefaults/TronderLeikan.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/TronderLeikan.Api.Tests/TronderLeikan.Api.Tests.csproj" />
     <Project Path="tests/TronderLeikan.Application.Tests/TronderLeikan.Application.Tests.csproj" />
     <Project Path="tests/TronderLeikan.Domain.Tests/TronderLeikan.Domain.Tests.csproj" />
     <Project Path="tests/TronderLeikan.Infrastructure.Tests/TronderLeikan.Infrastructure.Tests.csproj" />
