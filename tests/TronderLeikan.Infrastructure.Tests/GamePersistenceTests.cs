@@ -28,7 +28,8 @@ public sealed class GamePersistenceTests : IAsyncLifetime
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(_postgres.GetConnectionString())
             .Options;
-        return new AppDbContext(options);
+        // Stub for testformål — IDateTimeProvider trengs for SaveChangesAsync
+        return new AppDbContext(options, new TronderLeikan.Infrastructure.Services.SystemDateTimeProvider());
     }
 
     [Fact]
