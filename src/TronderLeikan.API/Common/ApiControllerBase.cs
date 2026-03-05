@@ -15,4 +15,13 @@ public abstract class ApiControllerBase : ControllerBase
             detail: error.Description,
             title: error.Code,
             statusCode: error.Type.ToHttpStatus());
+
+    // Kopierer opplastet fil til MemoryStream for sikker livstidsstyring
+    protected static async Task<MemoryStream> ToMemoryStreamAsync(IFormFile file, CancellationToken ct)
+    {
+        var ms = new MemoryStream();
+        await file.CopyToAsync(ms, ct);
+        ms.Position = 0;
+        return ms;
+    }
 }

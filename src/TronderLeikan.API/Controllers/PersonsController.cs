@@ -53,13 +53,11 @@ public sealed class PersonsController(
     public async Task<ActionResult> Delete(Guid id, CancellationToken ct) =>
         (await deleteHandler.Handle(new DeletePersonCommand(id), ct)).Match<ActionResult>(() => NoContent(), Problem);
 
-    // Laster opp profilbilde for en person — kopiér til MemoryStream for sikker livstidsstyring
+    // Laster opp profilbilde for en person
     [HttpPut("{id:guid}/image")]
     public async Task<ActionResult> UploadImage(Guid id, IFormFile image, CancellationToken ct)
     {
-        await using var ms = new MemoryStream();
-        await image.CopyToAsync(ms, ct);
-        ms.Position = 0;
+        await using var ms = await ToMemoryStreamAsync(image, ct);
         var result = await uploadImageHandler.Handle(new UploadPersonImageCommand(id, ms), ct);
         return result.Match<ActionResult>(() => NoContent(), Problem);
     }

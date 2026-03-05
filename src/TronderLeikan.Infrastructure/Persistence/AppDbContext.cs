@@ -59,26 +59,30 @@ internal sealed class AppDbContext(
         }
 
         // Skriv til EventStore (append-only audit log) — versjon økes per stream
-        var versionPerStream = new Dictionary<string, int>();
-        foreach (var @event in domainEvents)
-        {
-            var streamId = GetStreamId(@event);
+        // Beregn stream-IDer én gang for å unngå gjentatt refleksjon
+        var eventsWithStreamId = domainEvents
+            .Select(e => (Event: e, StreamId: GetStreamId(e)))
+            .ToList();
 
-            // Hent neste versjonsnummer (maks eksisterende + 1, med offset for denne batchen)
+        // Én spørring for å hente maks versjon per stream (unngår N+1)
+        var streamIds = eventsWithStreamId.Select(x => x.StreamId).Distinct().ToList();
+        var maxVersions = await EventStore
+            .Where(e => streamIds.Contains(e.StreamId))
+            .GroupBy(e => e.StreamId)
+            .Select(g => new { StreamId = g.Key, Max = g.Max(e => e.Version) })
+            .ToDictionaryAsync(x => x.StreamId, x => x.Max, cancellationToken);
+
+        var versionPerStream = new Dictionary<string, int>();
+        foreach (var (@event, streamId) in eventsWithStreamId)
+        {
             if (!versionPerStream.TryGetValue(streamId, out var nextVersion))
-            {
-                var maxExisting = await EventStore
-                    .Where(e => e.StreamId == streamId)
-                    .Select(e => (int?)e.Version)
-                    .MaxAsync(cancellationToken) ?? 0;
-                nextVersion = maxExisting + 1;
-            }
+                nextVersion = maxVersions.TryGetValue(streamId, out var max) ? max + 1 : 1;
 
             EventStore.Add(new EventStoreEntry
             {
                 Id = Guid.NewGuid(),
                 StreamId = streamId,
-                StreamType = @event.GetType().DeclaringType?.Name ?? @event.GetType().Namespace?.Split('.').LastOrDefault() ?? "Unknown",
+                StreamType = GetStreamType(@event),
                 EventType = @event.GetType().Name,
                 Payload = JsonSerializer.Serialize(@event, @event.GetType()),
                 Version = nextVersion,
@@ -91,13 +95,27 @@ internal sealed class AppDbContext(
         return await base.SaveChangesAsync(cancellationToken);
     }
 
-    // Finner StreamId basert på hendelsestype — bruker refleksjon for å hente GameId eller annen aggregat-Id
+    // Finner StreamId basert på hendelsestype — bruker refleksjon for å hente aggregat-Id
     private static string GetStreamId(IDomainEvent @event)
     {
-        var props = @event.GetType().GetProperties();
-        var idProp = props.FirstOrDefault(p =>
-            p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase) &&
-            p.PropertyType == typeof(Guid));
-        return idProp?.GetValue(@event)?.ToString() ?? Guid.Empty.ToString();
+        var idProp = @event.GetType().GetProperties()
+            .FirstOrDefault(p =>
+                p.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase) &&
+                p.PropertyType == typeof(Guid));
+
+        if (idProp is null)
+            throw new InvalidOperationException(
+                $"Domeinehendelse '{@event.GetType().Name}' mangler en Guid-egenskap som slutter på 'Id'. " +
+                "Legg til en slik egenskap for korrekt stream-gruppering.");
+
+        return idProp.GetValue(@event)!.ToString()!;
+    }
+
+    // Henter aggregattypen fra namespace (f.eks. "Games" fra "TronderLeikan.Domain.Games.Events")
+    private static string GetStreamType(IDomainEvent @event)
+    {
+        var parts = @event.GetType().Namespace?.Split('.');
+        // Nest siste segment er aggregat-mappen (f.eks. Games, Persons, Tournaments)
+        return parts is { Length: >= 2 } ? parts[^2] : "Unknown";
     }
 }

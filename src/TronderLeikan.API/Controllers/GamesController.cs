@@ -63,13 +63,11 @@ public sealed class GamesController(
     public async Task<ActionResult> Complete(Guid id, CompleteGameCommand command, CancellationToken ct) =>
         (await completeHandler.Handle(command with { GameId = id }, ct)).Match<ActionResult>(() => NoContent(), Problem);
 
-    // Banner-opplasting — kopiér til MemoryStream for sikker livstidsstyring
+    // Banner-opplasting
     [HttpPut("{id:guid}/banner")]
     public async Task<ActionResult> UploadBanner(Guid id, IFormFile banner, CancellationToken ct)
     {
-        await using var ms = new MemoryStream();
-        await banner.CopyToAsync(ms, ct);
-        ms.Position = 0;
+        await using var ms = await ToMemoryStreamAsync(banner, ct);
         var result = await uploadBannerHandler.Handle(new UploadGameBannerCommand(id, ms), ct);
         return result.Match<ActionResult>(() => NoContent(), Problem);
     }
