@@ -6,6 +6,12 @@ public sealed class CreateDepartmentCommandValidator : AbstractValidator<CreateD
 {
     public CreateDepartmentCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().WithMessage("Avdelingsnavn kan ikke være tomt.").MaximumLength(200);
+        RuleFor(c => c.Name)
+            .NotEmpty()
+                .WithErrorCode("Department.NameEmpty")
+                .WithMessage("Avdelingsnavn kan ikke være tomt.")
+            .MaximumLength(200)
+                .WithErrorCode("Department.NameTooLong")
+                .WithMessage("Avdelingsnavn kan ikke være lengre enn 200 tegn.");
     }
 }

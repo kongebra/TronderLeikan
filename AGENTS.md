@@ -48,6 +48,15 @@ AI må følge disse reglene strengt over generisk kunnskap:
 - **Arrangør**: Poeng avhenger av om man også deltar (`organizedWithParticipation`).
 - **Ties**: Flere personer kan dele samme plassering.
 
+## 🔭 Observabilitet
+
+Filosofi: **Tracing og metrics > logging.**
+> "Man bruker logging for å finne ut hvorfor tracing ikke funker." — Martin Thwaits
+
+- **Tracing**: Alle commands og queries får automatisk Activity-span via `ObservabilityBehavior` i `ISender`-pipelinen. Bruk `ActivitySource("TronderLeikan.Sender")` for egendefinerte spans i viktig forretningslogikk.
+- **Metrics**: `sender.requests.total` og `sender.requests.duration` er alltid tilgjengelig og tagget med request-type og success/failure. Legg til domene-spesifikke metrics i egne behaviors ved behov.
+- **Logging**: Reserver for feil som *ikke* syns i traces — oppstartssekvens, infrastrukturfeil, og «dette burde aldri skje»-tilfeller.
+
 ## ✍️ Språk og Konvensjoner
 
 - **Kode**: Engelsk. **Kommentarer**: Norsk (viktig!).

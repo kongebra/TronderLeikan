@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using TronderLeikan.Application.Common.Behaviors;
 using TronderLeikan.Application.Common.Interfaces;
 
 namespace TronderLeikan.Application.Common;
@@ -18,7 +19,14 @@ public static class DependencyInjection
             .AddClasses(c => c.AssignableTo(typeof(IQueryHandler<,>)))
                 .AsImplementedInterfaces().WithScopedLifetime());
 
-        // FluentValidation — automatisk registrering av alle validators i assembly
+        // Pipeline-behaviors — rekkefølge: ObservabilityBehavior ytterst, ValidationBehavior innerst
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ObservabilityBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        // ISender — én avhengighet for alle controllers
+        services.AddScoped<ISender, Sender>();
+
+        // FluentValidation — automatisk registrering av alle validators
         services.AddValidatorsFromAssemblyContaining<IAppDbContext>();
 
         return services;
