@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using TronderLeikan.Application.Common.Errors;
 using TronderLeikan.Application.Common.Interfaces;
@@ -7,6 +9,10 @@ namespace TronderLeikan.Application.Common;
 
 internal sealed class Sender(IServiceProvider sp) : ISender
 {
+    // Statiske cacher — unngår gjentatt refleksjon per request
+    private static readonly ConcurrentDictionary<Type, MethodInfo> HandlerMethodCache = new();
+    private static readonly ConcurrentDictionary<Type, MethodInfo> BehaviorMethodCache = new();
+
     public Task<Result<TResult>> Send<TResult>(ICommand<TResult> command, CancellationToken ct = default) =>
         Dispatch<Result<TResult>>(
             command,
@@ -44,15 +50,15 @@ internal sealed class Sender(IServiceProvider sp) : ISender
         var behaviors = sp.GetServices(behaviorType).ToList();
 
         // Bygg pipeline — ytterste behavior kjøres først (ObservabilityBehavior → ValidationBehavior → handler)
+        var handleMethod = HandlerMethodCache.GetOrAdd(handlerType, t => t.GetMethod("Handle")!);
         Func<Task<TResponse>> pipeline = () =>
-            (Task<TResponse>)handlerType.GetMethod("Handle")!.Invoke(handler, [request, ct])!;
+            (Task<TResponse>)handleMethod.Invoke(handler, [request, ct])!;
 
         foreach (var behavior in Enumerable.Reverse(behaviors))
         {
             var inner = pipeline;
-            pipeline = () => (Task<TResponse>)behavior.GetType()
-                .GetMethod("Handle")!
-                .Invoke(behavior, [request, inner, ct])!;
+            var behaviorMethod = BehaviorMethodCache.GetOrAdd(behavior.GetType(), t => t.GetMethod("Handle")!);
+            pipeline = () => (Task<TResponse>)behaviorMethod.Invoke(behavior, [request, inner, ct])!;
         }
 
         return await pipeline();

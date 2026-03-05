@@ -25,34 +25,52 @@ public sealed class ObservabilityBehavior<TRequest, TResponse>
     {
         var name = typeof(TRequest).Name;
         var sw = Stopwatch.StartNew();
-
         using var activity = ActivitySource.StartActivity(name, ActivityKind.Internal);
         activity?.SetTag("sender.request", name);
 
-        var response = await next();
-        sw.Stop();
-
-        // Inspiser resultatet via IResult — begge Result-typer implementerer dette
-        var resultInterface = response as IResult;
-        var isFailure = resultInterface is { IsSuccess: false };
-        var errorCode = isFailure ? resultInterface!.Error?.Code : null;
-
-        if (isFailure)
+        TResponse response = default!;
+        Exception? caughtException = null;
+        try
         {
-            activity?.SetStatus(ActivityStatusCode.Error, errorCode);
-            activity?.SetTag("sender.error", errorCode);
+            response = await next();
+        }
+        catch (Exception ex)
+        {
+            caughtException = ex;
+        }
+        finally
+        {
+            sw.Stop();
+
+            // Ved ukontrollert exception — merk span og teller som feil
+            var isException = caughtException is not null;
+            var resultInterface = response as IResult;
+            var isFailure = isException || resultInterface is { IsSuccess: false };
+            var errorCode = isException
+                ? caughtException!.GetType().Name
+                : resultInterface?.Error?.Code;
+
+            if (isFailure)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, errorCode);
+                activity?.SetTag("sender.error", errorCode);
+            }
+
+            var tags = new TagList
+            {
+                { "request.type",   name },
+                { "request.result", isFailure ? "failure" : "success" }
+            };
+            if (errorCode is not null)
+                tags.Add("request.error_code", errorCode);
+
+            RequestCounter.Add(1, tags);
+            RequestDuration.Record(sw.Elapsed.TotalMilliseconds, tags);
         }
 
-        var tags = new TagList
-        {
-            { "request.type",   name },
-            { "request.result", isFailure ? "failure" : "success" }
-        };
-        if (errorCode is not null)
-            tags.Add("request.error_code", errorCode);
-
-        RequestCounter.Add(1, tags);
-        RequestDuration.Record(sw.Elapsed.TotalMilliseconds, tags);
+        // Rethrow etter at metrics er registrert
+        if (caughtException is not null)
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(caughtException).Throw();
 
         return response;
     }

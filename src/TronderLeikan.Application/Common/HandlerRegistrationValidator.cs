@@ -17,6 +17,8 @@ internal sealed class HandlerRegistrationValidator(IServiceProvider sp) : IStart
 
     private void ValidateHandlers()
     {
+        // NB: Scanner kun Application-assembly. Legg til flere assemblies her dersom
+        // commands/queries flyttes til egne moduler eller feature-slice-assemblies.
         var assembly = typeof(IAppDbContext).Assembly;
 
         // Bruk et scope slik at scoped tjenester kan løses uten feil fra root-provider

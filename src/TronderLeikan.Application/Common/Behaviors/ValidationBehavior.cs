@@ -9,6 +9,7 @@ namespace TronderLeikan.Application.Common.Behaviors;
 public sealed class ValidationBehavior<TRequest, TResponse>(
     IEnumerable<IValidator<TRequest>> validators)
     : IPipelineBehavior<TRequest, TResponse>
+    where TResponse : IResult
 {
     public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> next, CancellationToken ct)
     {
