@@ -6,8 +6,8 @@ using Aspire.Hosting;
 internal static class ZitadelExtensions
 {
     /// <summary>
-    /// Legger til Zitadel v4-stack (api + login + Traefik proxy) i Aspire-appliksjonen.
-    /// Returnerer Traefik-resursen som er det felles inngangspunktet (port 8080).
+    /// Legger til Zitadel v4-stack (api + login + Traefik proxy) i Aspire-applikasjonen.
+    /// Returnerer Traefik-ressursen som er det felles inngangspunktet (port 8080).
     /// </summary>
     internal static IResourceBuilder<ContainerResource> AddZitadel(
         this IDistributedApplicationBuilder builder,

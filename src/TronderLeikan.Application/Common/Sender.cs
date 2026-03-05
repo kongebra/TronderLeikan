@@ -61,7 +61,12 @@ internal sealed class Sender(IServiceProvider sp) : ISender
         foreach (var behavior in Enumerable.Reverse(behaviors))
         {
             var inner = pipeline;
-            var behaviorMethod = BehaviorMethodCache.GetOrAdd(behavior.GetType(), t => t.GetMethod("Handle")!);
+            var behaviorMethod = BehaviorMethodCache.GetOrAdd(
+                behavior.GetType(),
+                t => t.GetMethod("Handle")
+                    ?? throw new InvalidOperationException(
+                        $"Fant ikke 'Handle'-metode på pipeline-behavior '{t.FullName}'. " +
+                        "Sjekk at metoden er public og ikke eksplisitt implementert."));
             pipeline = () => Invoke<TResponse>(behaviorMethod, behavior, [request, inner, ct]);
         }
 

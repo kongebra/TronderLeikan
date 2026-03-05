@@ -33,7 +33,8 @@ public sealed class ZitadelFixture : IAsyncLifetime
         _postgres = new PostgreSqlBuilder()
             .WithNetwork(_network)
             .WithNetworkAliases("postgres")
-            // Zitadel krever egen database — postgres-image oppretter "postgres"-databasen by default
+            // "postgres" er standard-databasen. Zitadel oppretter "zitadel"-databasen selv
+            // ved start-from-init via admin-brukerens superuser-privilegier — ingen pre-oppretting nødvendig.
             .WithDatabase("postgres")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -43,6 +44,10 @@ public sealed class ZitadelFixture : IAsyncLifetime
             .WithImage(ZitadelImage)
             .WithNetwork(_network)
             .WithCommand("start-from-init", "--masterkey", MasterKey)
+            // Tilfeldig host-port for å unngå konflikter ved parallelle testruns.
+            // MERK: ZITADEL_EXTERNALPORT=8080 refererer til den interne porten som Zitadel
+            // bruker for å generere OIDC-metadata og redirect-URIer. For API-tester (PAT-autentisering)
+            // er ikke ekstern port relevant. For OAuth-flow-tester trengs fast port-binding.
             .WithPortBinding(8080, true)
             .WithEnvironment("ZITADEL_EXTERNALPORT", "8080")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
