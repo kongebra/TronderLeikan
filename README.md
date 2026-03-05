@@ -38,7 +38,7 @@ Trønder Leikan lar administratorer:
 | Frontend | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
 | Database | PostgreSQL |
 | Cache | Valkey (Redis-kompatibel) |
-| Orkestrering | .NET Aspire |
+| Identity | Zitadel v4 |\n| Orkestrering | .NET Aspire |
 | Pakkehåndtering (frontend) | Bun |
 
 ---
@@ -51,6 +51,18 @@ Trønder Leikan lar administratorer:
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for PostgreSQL og Valkey)
 - [Bun](https://bun.sh/) (for frontend)
 - .NET Aspire workload: `dotnet workload install aspire`
+
+### User secrets (én gang etter kloning)
+
+```bash
+# Postgres-passord — brukes av database og Zitadel
+dotnet user-secrets --project src/TronderLeikan.AppHost \
+  set "Parameters:postgres-password" "postgres-dev-local!"
+
+# Zitadel masterkey — må være nøyaktig 32 tegn
+dotnet user-secrets --project src/TronderLeikan.AppHost \
+  set "Zitadel:MasterKey" "MasterkeyNeedsToHave32Chars!!"
+```
 
 ### Kjør hele stacken
 
