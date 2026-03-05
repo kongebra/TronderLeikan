@@ -58,19 +58,34 @@ internal sealed class AppDbContext(
             });
         }
 
-        // Skriv til EventStore (append-only audit log)
+        // Skriv til EventStore (append-only audit log) — versjon økes per stream
+        var versionPerStream = new Dictionary<string, int>();
         foreach (var @event in domainEvents)
         {
+            var streamId = GetStreamId(@event);
+
+            // Hent neste versjonsnummer (maks eksisterende + 1, med offset for denne batchen)
+            if (!versionPerStream.TryGetValue(streamId, out var nextVersion))
+            {
+                var maxExisting = await EventStore
+                    .Where(e => e.StreamId == streamId)
+                    .Select(e => (int?)e.Version)
+                    .MaxAsync(cancellationToken) ?? 0;
+                nextVersion = maxExisting + 1;
+            }
+
             EventStore.Add(new EventStoreEntry
             {
                 Id = Guid.NewGuid(),
-                StreamId = GetStreamId(@event),
+                StreamId = streamId,
                 StreamType = @event.GetType().DeclaringType?.Name ?? @event.GetType().Namespace?.Split('.').LastOrDefault() ?? "Unknown",
                 EventType = @event.GetType().Name,
                 Payload = JsonSerializer.Serialize(@event, @event.GetType()),
-                Version = 1,
+                Version = nextVersion,
                 OccurredAt = clock.UtcNow
             });
+
+            versionPerStream[streamId] = nextVersion + 1;
         }
 
         return await base.SaveChangesAsync(cancellationToken);
