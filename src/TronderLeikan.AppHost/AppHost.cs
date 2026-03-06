@@ -37,4 +37,22 @@ var api = builder.AddProject<Projects.TronderLeikan_API>("api")
     .WaitFor(zitadel)
     .WithHttpHealthCheck("/health");
 
+// Frontend — Next.js via Bun
+// better-auth trenger ZITADEL_ISSUER, CLIENT_ID, CLIENT_SECRET og BETTER_AUTH_SECRET
+var betterAuthSecret = builder.AddParameter("better-auth-secret", secret: true);
+var zitadelClientId = builder.AddParameter("zitadel-client-id", secret: false);
+var zitadelClientSecret = builder.AddParameter("zitadel-client-secret", secret: true);
+
+var frontend = builder.AddBunApp("frontend", "../frontend")
+    .WithReference(api)
+    .WithReference(zitadel.GetEndpoint("http"))
+    .WithEnvironment("API_BASE_URL", api.GetEndpoint("http"))
+    .WithEnvironment("ZITADEL_ISSUER", "http://localhost:8080")
+    .WithEnvironment("ZITADEL_CLIENT_ID", zitadelClientId)
+    .WithEnvironment("ZITADEL_CLIENT_SECRET", zitadelClientSecret)
+    .WithEnvironment("BETTER_AUTH_SECRET", betterAuthSecret)
+    .WithEnvironment("BETTER_AUTH_URL", "http://localhost:3000")
+    .WithHttpEndpoint(port: 3000, targetPort: 3000, name: "http")
+    .WaitFor(api);
+
 builder.Build().Run();
