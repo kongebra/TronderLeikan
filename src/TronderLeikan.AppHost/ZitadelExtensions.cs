@@ -16,8 +16,15 @@ internal static class ZitadelExtensions
         IResourceBuilder<ParameterResource> postgresAdminPassword)
     {
         // Masterkey hentes fra user secrets — må være nøyaktig 32 tegn
+        // Sett med: dotnet user-secrets set "Zitadel:MasterKey" "<32-tegns-nøkkel>"
         var masterKey = builder.Configuration["Zitadel:MasterKey"]
-            ?? "MasterkeyNeedsToHave32Chars!!";
+            ?? throw new InvalidOperationException(
+                "Zitadel:MasterKey er ikke konfigurert i user secrets. " +
+                "Kjør: dotnet user-secrets set \"Zitadel:MasterKey\" \"<nøyaktig 32 tegn>\"");
+
+        if (masterKey.Length != 32)
+            throw new InvalidOperationException(
+                $"Zitadel:MasterKey må være nøyaktig 32 tegn (er {masterKey.Length}).");
 
         // PostgreSQL-serveren som Zitadel-databasen bor på
         var postgresServer = database.Resource.Parent;
@@ -29,16 +36,15 @@ internal static class ZitadelExtensions
             .WithHttpEndpoint(targetPort: 8080, name: "http")
             .WithArgs("start-from-init", "--masterkey", masterKey)
             .WithEnvironment("ZITADEL_EXTERNALPORT", "8080")
+            .WithEnvironment("ZITADEL_EXTERNALDOMAIN", "localhost")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
-            .WithEnvironment("ZITADEL_DOMAIN", "localhost")
+            .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_DATABASE", "zitadel")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_USERNAME", "postgres")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_SSL_MODE", "disable")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME", "postgres")
             // IResourceBuilder<ParameterResource>-overload sikrer korrekt runtime-resolving av passordet
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_PASSWORD", postgresAdminPassword)
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_USERNAME", "zitadel")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_PASSWORD", "zitadel")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_SSL_MODE", "disable")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD", postgresAdminPassword)
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_USERNAME", "zitadel")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_PASSWORD", "zitadel")
             .WithEnvironment(ctx =>
             {
                 // Host og port resolves av Aspire via EndpointProperty ved runtime
@@ -48,16 +54,31 @@ internal static class ZitadelExtensions
                 ctx.EnvironmentVariables["ZITADEL_DATABASE_POSTGRES_PORT"] =
                     ep.Property(EndpointProperty.Port);
             })
-            // Bootstrap-mappe for initial admin PAT (Personal Access Token)
-            .WithBindMount("./zitadel-bootstrap", "/app/bootstrap")
+            // Bootstrap-mappe for PAT (Personal Access Token) — deles med zitadel-login
+            .WithBindMount("./zitadel-bootstrap", "/zitadel/bootstrap")
+            // Skriv login-client PAT til bootstrap-mappe ved første oppstart
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH", "/zitadel/bootstrap/login-client.pat")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME", "login-client")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME", "Automatically Initialized IAM_LOGIN_CLIENT")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE", "2099-01-01T00:00:00Z")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED", "false")
+            // Login v2-URLer — peker på Traefik-proxyen (port 8080)
+            .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "true")
+            .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI", "http://localhost:8080/ui/v2/login/")
+            .WithEnvironment("ZITADEL_OIDC_DEFAULTLOGINURLV2", "http://localhost:8080/ui/v2/login/login?authRequest=")
+            .WithEnvironment("ZITADEL_OIDC_DEFAULTLOGOUTURLV2", "http://localhost:8080/ui/v2/login/logout?post_logout_redirect=")
             .WaitFor(database);
 
         // zitadel-login — Next.js UI for innloggingsflyter (PathPrefix /ui/v2)
-        // MERK: Bildets navn må verifiseres mot Zitadel v4 releases
         var zitadelLogin = builder
             .AddContainer($"{name}-login", "ghcr.io/zitadel/zitadel-login", "v4.11.0")
             .WithHttpEndpoint(targetPort: 3000, name: "http")
             .WithEnvironment("ZITADEL_API_URL", zitadelApi.GetEndpoint("http"))
+            .WithEnvironment("NEXT_PUBLIC_BASE_PATH", "/ui/v2/login")
+            .WithEnvironment("CUSTOM_REQUEST_HEADERS", "Host:localhost,X-Forwarded-Proto:http")
+            // Les login-client PAT fra bootstrap-mappen som zitadel-api skriver til
+            .WithEnvironment("ZITADEL_SERVICE_USER_TOKEN_FILE", "/zitadel/bootstrap/login-client.pat")
+            .WithBindMount("./zitadel-bootstrap", "/zitadel/bootstrap", isReadOnly: true)
             .WaitFor(zitadelApi);
 
         // Traefik — felles inngangspunkt som ruter til riktig backend

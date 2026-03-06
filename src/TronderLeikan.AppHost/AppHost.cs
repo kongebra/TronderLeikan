@@ -5,7 +5,15 @@ var builder = DistributedApplication.CreateBuilder(args);
 var postgresPassword = builder.AddParameter("postgres-password", secret: true);
 
 // PostgreSQL — database for TrønderLeikan og Zitadel på samme instans
-var postgres = builder.AddPostgres("postgres", password: postgresPassword);
+// md5-autentisering brukes istedenfor scram-sha-256 fordi Zitadels Go pgx-driver
+// ikke støtter scram-sha-256-plus (channel binding) mot Aspires SSL-konfigurerte postgres
+var postgres = builder.AddPostgres("postgres", password: postgresPassword)
+    .WithEnvironment("POSTGRES_HOST_AUTH_METHOD", "md5")
+    .WithEnvironment("POSTGRES_INITDB_ARGS", "--auth-host=md5 --auth-local=md5")
+    // NB: Endre volum-navn (eller slett eksisterende volum) ved bytte av auth-oppsett,
+    // ellers vil initdb-innstillingene over ikke kjøres på allerede initialisert data.
+    .WithDataVolume("tronderleikan-postgres-data-md5")
+    .WithLifetime(ContainerLifetime.Persistent);
 var tronderleikanDb = postgres.AddDatabase("tronderleikan");
 
 // Zitadel bruker en separat database på samme Postgres-instans
