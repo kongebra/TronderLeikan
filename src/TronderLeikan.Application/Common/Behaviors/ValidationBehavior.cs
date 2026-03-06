@@ -19,6 +19,7 @@ public sealed class ValidationBehavior<TRequest, TResponse>(
             return await next();
 
         var context = new ValidationContext<TRequest>(request);
+        // ValidateAsync støtter async-validators (f.eks. DB-sjekker) og CancellationToken
         var results = await Task.WhenAll(validatorList.Select(v => v.ValidateAsync(context, ct)));
         var failures = results
             .SelectMany(r => r.Errors)
