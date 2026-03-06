@@ -10,7 +10,9 @@ var postgresPassword = builder.AddParameter("postgres-password", secret: true);
 var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithEnvironment("POSTGRES_HOST_AUTH_METHOD", "md5")
     .WithEnvironment("POSTGRES_INITDB_ARGS", "--auth-host=md5 --auth-local=md5")
-    .WithDataVolume("tronderleikan-postgres-data")
+    // NB: Endre volum-navn (eller slett eksisterende volum) ved bytte av auth-oppsett,
+    // ellers vil initdb-innstillingene over ikke kjøres på allerede initialisert data.
+    .WithDataVolume("tronderleikan-postgres-data-md5")
     .WithLifetime(ContainerLifetime.Persistent);
 var tronderleikanDb = postgres.AddDatabase("tronderleikan");
 

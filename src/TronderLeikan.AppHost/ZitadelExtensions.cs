@@ -16,8 +16,15 @@ internal static class ZitadelExtensions
         IResourceBuilder<ParameterResource> postgresAdminPassword)
     {
         // Masterkey hentes fra user secrets — må være nøyaktig 32 tegn
+        // Sett med: dotnet user-secrets set "Zitadel:MasterKey" "<32-tegns-nøkkel>"
         var masterKey = builder.Configuration["Zitadel:MasterKey"]
-            ?? "MasterkeyNeedsToHave32Chars!!!!!"; // fallback er nøyaktig 32 tegn
+            ?? throw new InvalidOperationException(
+                "Zitadel:MasterKey er ikke konfigurert i user secrets. " +
+                "Kjør: dotnet user-secrets set \"Zitadel:MasterKey\" \"<nøyaktig 32 tegn>\"");
+
+        if (masterKey.Length != 32)
+            throw new InvalidOperationException(
+                $"Zitadel:MasterKey må være nøyaktig 32 tegn (er {masterKey.Length}).");
 
         // PostgreSQL-serveren som Zitadel-databasen bor på
         var postgresServer = database.Resource.Parent;
