@@ -24,7 +24,7 @@ var zitadelDb = postgres.AddDatabase("zitadel");
 var zitadel = builder.AddZitadel("zitadel", zitadelDb, postgresPassword);
 
 // DbMigrator kjøres automatisk ved oppstart, etter at PostgreSQL er klar
-// API venter til migrations er fullfort
+// API venter til migrations er fullført
 var migrator = builder.AddProject<Projects.TronderLeikan_DbMigrator>("migrator")
     .WithReference(tronderleikanDb)
     .WaitFor(tronderleikanDb);
@@ -47,12 +47,13 @@ var frontend = builder.AddBunApp("frontend", "../frontend")
     .WithReference(api)
     .WithReference(zitadel.GetEndpoint("http"))
     .WithEnvironment("API_BASE_URL", api.GetEndpoint("http"))
-    .WithEnvironment("ZITADEL_ISSUER", "http://localhost:8080")
+    .WithEnvironment("ZITADEL_ISSUER", zitadel.GetEndpoint("http"))
     .WithEnvironment("ZITADEL_CLIENT_ID", zitadelClientId)
     .WithEnvironment("ZITADEL_CLIENT_SECRET", zitadelClientSecret)
     .WithEnvironment("BETTER_AUTH_SECRET", betterAuthSecret)
-    .WithEnvironment("BETTER_AUTH_URL", "http://localhost:3000")
     .WithHttpEndpoint(port: 3000, targetPort: 3000, name: "http")
     .WaitFor(api);
+
+frontend.WithEnvironment("BETTER_AUTH_URL", frontend.GetEndpoint("http"));
 
 builder.Build().Run();
