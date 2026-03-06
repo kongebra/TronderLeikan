@@ -12,8 +12,8 @@ http:
     zitadel-login-service:
       loadBalancer:
         servers:
-          - url: "{{ env \"ZITADEL_LOGIN_INTERNAL_URL\" }}"
+          - url: '{{ env "ZITADEL_LOGIN_INTERNAL_URL" }}'
     zitadel-api-service:
       loadBalancer:
         servers:
-          - url: "{{ env \"ZITADEL_API_INTERNAL_URL\" }}"
+          - url: '{{ env "ZITADEL_API_INTERNAL_URL" }}'
