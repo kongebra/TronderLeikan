@@ -61,7 +61,7 @@ dotnet user-secrets --project src/TronderLeikan.AppHost \
 
 # Zitadel masterkey — må være nøyaktig 32 tegn
 dotnet user-secrets --project src/TronderLeikan.AppHost \
-  set "Zitadel:MasterKey" "MasterkeyNeedsToHave32Chars!!"
+  set "Zitadel:MasterKey" "MasterkeyNeedsToHave32Chars!!!!!"
 ```
 
 ### Kjør hele stacken

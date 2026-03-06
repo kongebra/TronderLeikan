@@ -22,8 +22,8 @@ public sealed class ZitadelFixture : IAsyncLifetime
     /// <summary>Basis-URL til Zitadel API (f.eks. http://localhost:12345).</summary>
     public string ZitadelBaseUrl { get; private set; } = default!;
 
-    /// <summary>Initial admin PAT lest fra bootstrap-filen etter oppstart.</summary>
-    public string InitialAdminPat { get; private set; } = default!;
+    /// <summary>Login-klient PAT lest fra bootstrap-filen etter oppstart.</summary>
+    public string LoginClientPat { get; private set; } = default!;
 
     public ZitadelFixture()
     {
@@ -96,7 +96,11 @@ public sealed class ZitadelFixture : IAsyncLifetime
             }
             await Task.Delay(TimeSpan.FromSeconds(attempt));
         }
-        InitialAdminPat = System.Text.Encoding.UTF8.GetString(patBytes).Trim();
+        LoginClientPat = System.Text.Encoding.UTF8.GetString(patBytes).Trim();
+        if (string.IsNullOrWhiteSpace(LoginClientPat))
+            throw new InvalidOperationException(
+                $"Zitadel-fixture: PAT-filen '{patPath}' var tom eller utilgjengelig etter 10 forsøk. " +
+                "Sjekk at ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH er riktig og at containeren startet uten feil.");
     }
 
     public async Task DisposeAsync()
