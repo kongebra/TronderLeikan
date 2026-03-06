@@ -26,6 +26,17 @@
   --color-accent-glow:   #d4972a33; /* glød-skygge */
   --color-accent-subtle: #d4972a18; /* svak bakgrunn-tint */
 
+  /* Medaljefarger — gull, sølv, bronse for scoreboard */
+  --color-gold:          #d4972a;
+  --color-gold-subtle:   rgba(212, 151, 42, 0.13);
+  --color-gold-border:   rgba(212, 151, 42, 0.33);
+  --color-silver:        #c0c8d8;
+  --color-silver-subtle: rgba(192, 200, 216, 0.13);
+  --color-silver-border: rgba(192, 200, 216, 0.27);
+  --color-bronze:        #b86222;
+  --color-bronze-subtle: rgba(184, 98, 34, 0.13);
+  --color-bronze-border: rgba(184, 98, 34, 0.27);
+
   /* Semantiske farger */
   --color-success: #3d9e6e;
   --color-danger:  #c0392b;
