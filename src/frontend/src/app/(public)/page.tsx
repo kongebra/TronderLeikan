@@ -1,65 +1,192 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
 
-export default function Home() {
+// Datamodell for turnering — tilsvarer API-respons fra /api/v1/tournaments
+type TournamentSummaryResponse = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+// Henter turneringer fra backend. Returnerer tomt array ved utilgjengelighet,
+// slik at siden alltid rendres — selv uten API-tilkobling under utvikling.
+async function getTournaments(): Promise<TournamentSummaryResponse[]> {
+  try {
+    const res = await fetch(
+      `${process.env.API_BASE_URL ?? "http://localhost:5000"}/api/v1/tournaments`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export const metadata: Metadata = {
+  title: "Turneringer",
+  description:
+    "Oversikt over alle turneringer i TrønderLeikan. Følg med på rangeringer og resultater.",
+};
+
+// Turneringskort — lenker til turneringsdetaljsiden
+function TournamentCard({ tournament }: { tournament: TournamentSummaryResponse }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <Link
+      href={`/tournaments/${tournament.slug}`}
+      className="card group block animate-fade-up"
+      style={{ textDecoration: "none" }}
+    >
+      {/* Aksent-stripe øverst på kortet */}
+      <div
+        aria-hidden="true"
+        style={{
+          height: "2px",
+          background: `linear-gradient(90deg, var(--color-accent), transparent)`,
+          marginBottom: "1.25rem",
+          borderRadius: "1px",
+          opacity: 0.6,
+          transition: "opacity 0.2s var(--ease-out-expo)",
+        }}
+        className="group-hover:opacity-100"
+      />
+
+      {/* Turneringsnavn */}
+      <h2
+        style={{
+          fontSize: "1.125rem",
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          color: "var(--color-text-primary)",
+          marginBottom: "0.5rem",
+          lineHeight: 1.3,
+          transition: "color 0.2s var(--ease-out-expo)",
+        }}
+        className="group-hover:text-[var(--color-accent)]"
+      >
+        {tournament.name}
+      </h2>
+
+      {/* Lenke-indikator */}
+      <span
+        style={{
+          fontSize: "0.8125rem",
+          color: "var(--color-text-muted)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.25rem",
+          transition: "color 0.2s var(--ease-out-expo)",
+        }}
+        className="group-hover:text-[var(--color-accent)]"
+      >
+        Se resultater
+        <span aria-hidden="true" style={{ transition: "transform 0.2s var(--ease-out-expo)" }} className="group-hover:translate-x-1 inline-block">→</span>
+      </span>
+    </Link>
+  );
+}
+
+// Tom-tilstand — vises når ingen turneringer er registrert ennå
+function EmptyState() {
+  return (
+    <div
+      className="animate-fade-up"
+      style={{
+        gridColumn: "1 / -1",
+        textAlign: "center",
+        padding: "4rem 2rem",
+        border: "1px dashed var(--color-border)",
+        borderRadius: "0.75rem",
+        color: "var(--color-text-muted)",
+      }}
+    >
+      {/* Dekorativt ikon */}
+      <div
+        aria-hidden="true"
+        style={{
+          fontSize: "2.5rem",
+          marginBottom: "1rem",
+          opacity: 0.4,
+        }}
+      >
+        ⬡
+      </div>
+      <p
+        style={{
+          fontSize: "1rem",
+          fontWeight: 600,
+          color: "var(--color-text-secondary)",
+          marginBottom: "0.375rem",
+        }}
+      >
+        Ingen turneringer ennå
+      </p>
+      <p style={{ fontSize: "0.875rem" }}>
+        Turneringer vil dukke opp her når de er opprettet.
+      </p>
+    </div>
+  );
+}
+
+// Hjem-side — Server Component som henter turneringer og viser kortgrid
+export default async function HomePage() {
+  const tournaments = await getTournaments();
+
+  return (
+    <div className="container section">
+      {/* Sideoverskrift med aksent-dekorasjon */}
+      <div
+        className="animate-fade-up"
+        style={{ marginBottom: "2.5rem" }}
+      >
+        <span className="badge-accent" style={{ marginBottom: "0.75rem" }}>
+          Alle turneringer
+        </span>
+        <h1
+          style={{
+            fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            color: "var(--color-text-primary)",
+            lineHeight: 1.15,
+            marginTop: "0.5rem",
+          }}
+        >
+          TrønderLeikan
+        </h1>
+        <p
+          style={{
+            fontSize: "1rem",
+            color: "var(--color-text-secondary)",
+            marginTop: "0.5rem",
+            maxWidth: "36rem",
+          }}
+        >
+          Plattform for turneringsstyring og poengberegning i Trøndelag.
+        </p>
+      </div>
+
+      {/* Kortgrid — responsivt, 1–3 kolonner */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 20rem), 1fr))",
+          gap: "1rem",
+        }}
+      >
+        {tournaments.length === 0 ? (
+          <EmptyState />
+        ) : (
+          tournaments.map((tournament, index) => (
+            <div
+              key={tournament.id}
+              style={{ animationDelay: `${index * 60}ms` }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <TournamentCard tournament={tournament} />
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
