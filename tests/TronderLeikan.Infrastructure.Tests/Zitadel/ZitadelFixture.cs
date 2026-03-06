@@ -11,8 +11,8 @@ namespace TronderLeikan.Infrastructure.Tests.Zitadel;
 
 public sealed class ZitadelFixture : IAsyncLifetime
 {
-    // Masterkey for lokal testing — ikke bruk i produksjon
-    private const string MasterKey = "MasterkeyNeedsToHave32Chars!!";
+    // Masterkey for lokal testing — må være nøyaktig 32 tegn, ikke bruk i produksjon
+    private const string MasterKey = "MasterkeyNeedsToHave32Chars!!!!!";
     private const string ZitadelImage = "ghcr.io/zitadel/zitadel:v4.11.0";
 
     private readonly INetwork _network;
@@ -50,17 +50,16 @@ public sealed class ZitadelFixture : IAsyncLifetime
             // er ikke ekstern port relevant. For OAuth-flow-tester trengs fast port-binding.
             .WithPortBinding(8080, true)
             .WithEnvironment("ZITADEL_EXTERNALPORT", "8080")
+            .WithEnvironment("ZITADEL_EXTERNALDOMAIN", "localhost")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
-            .WithEnvironment("ZITADEL_DOMAIN", "localhost")
+            .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_HOST", "postgres")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_PORT", "5432")
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_DATABASE", "zitadel")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_USERNAME", "postgres")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_PASSWORD", "postgres")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_ADMINUSER_SSL_MODE", "disable")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_USERNAME", "zitadel")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_PASSWORD", "zitadel")
-            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_APPUSER_SSL_MODE", "disable")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME", "postgres")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD", "postgres")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_USERNAME", "zitadel")
+            .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_PASSWORD", "zitadel")
             // Zitadel er klar når /debug/healthz returnerer 200
             .WithWaitStrategy(Wait.ForUnixContainer()
                 .UntilHttpRequestIsSucceeded(req => req
@@ -79,10 +78,24 @@ public sealed class ZitadelFixture : IAsyncLifetime
         var port = _zitadelApi.GetMappedPublicPort(8080);
         ZitadelBaseUrl = $"http://localhost:{port}";
 
-        // Les initial admin PAT fra bootstrap-filen som Zitadel skriver ved init.
-        // Filstien er /app/bootstrap/zitadel-admin-sa.pat inne i containeren.
-        // TODO: Verifiser eksakt filsti mot Zitadel v4.11.0 release notes.
-        var patBytes = await _zitadelApi.ReadFileAsync("/app/bootstrap/zitadel-admin-sa.pat");
+        // Les initial login-klient PAT fra bootstrap-filen som Zitadel skriver ved init.
+        // Filstien styres av ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH.
+        // Zitadel kan skrive filen litt etter at /debug/healthz er grønt — vi prøver et par ganger.
+        var patPath = "/zitadel/bootstrap/login-client.pat";
+        byte[] patBytes = [];
+        for (var attempt = 1; attempt <= 10; attempt++)
+        {
+            try
+            {
+                patBytes = await _zitadelApi.ReadFileAsync(patPath);
+                if (patBytes.Length > 0) break;
+            }
+            catch
+            {
+                // Filen finnes ikke ennå — vent og prøv igjen
+            }
+            await Task.Delay(TimeSpan.FromSeconds(attempt));
+        }
         InitialAdminPat = System.Text.Encoding.UTF8.GetString(patBytes).Trim();
     }
 

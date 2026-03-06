@@ -62,8 +62,13 @@ Traefik v3.x støtter `{{ env "VAR" }}` i dynamisk konfig via Go-templating.
 ## Bootstrap-volum
 
 Zitadel skriver PAT (Personal Access Token) for initial admin-bruker til `/app/bootstrap`.
-Dette mattes til `./zitadel-bootstrap/` lokalt (relativ til AppHost working directory).
+Dette mappes til `./zitadel-bootstrap/` lokalt (relativ til AppHost working directory).
 Mappen er lagt i `.gitignore` siden den inneholder hemmeligheter.
+
+**Bind mount-stier i Aspire:** `WithBindMount` løser relative stier relativt til AppHost-prosjektets
+katalog (der `.csproj`-filen ligger), ikke prosessens CWD. Mappen `./zitadel-bootstrap` og
+`./traefik` opprettes altså under `src/TronderLeikan.AppHost/` uavhengig av hvilken katalog
+`dotnet run` kjøres fra. Dette er standard Aspire-oppførsel og trenger ikke absolutte stier.
 
 ## ZitadelExtensions — Aspire API
 
