@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Orval-generert API-klient
+src/lib/api/index.ts
+src/lib/api/model/
