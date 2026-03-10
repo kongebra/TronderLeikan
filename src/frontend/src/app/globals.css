@@ -38,9 +38,16 @@
   --color-bronze-border: rgba(184, 98, 34, 0.27);
 
   /* Semantiske farger */
-  --color-success: #3d9e6e;
-  --color-danger:  #c0392b;
-  --color-info:    #3a7bd5;
+  --color-success:        #3d9e6e;
+  --color-success-subtle: rgba(61, 158, 110, 0.12);
+  --color-success-border: rgba(61, 158, 110, 0.25);
+  --color-danger:         #c0392b;
+  --color-danger-subtle:  rgba(192, 57, 43, 0.07);
+  --color-danger-border:  rgba(192, 57, 43, 0.25);
+  --color-info:           #3a7bd5;
+
+  /* Tekst på aksent-bakgrunn */
+  --color-on-accent: #0c0d10;
 
   /* Typografi */
   --font-sans: var(--font-sora), "Sora", system-ui, sans-serif;

@@ -175,7 +175,7 @@ export default async function AdminPersonsPage() {
           height: 2.375rem;
           padding: 0 1.125rem;
           background-color: var(--color-accent);
-          color: #0c0d10;
+          color: var(--color-on-accent);
           font-size: 0.875rem;
           font-weight: 700;
           font-family: var(--font-sans);
@@ -300,9 +300,9 @@ export default async function AdminPersonsPage() {
           font-weight: 600;
           padding: 0.125rem 0.5rem;
           border-radius: 9999px;
-          background-color: rgba(61, 158, 110, 0.12);
+          background-color: var(--color-success-subtle);
           color: var(--color-success);
-          border: 1px solid rgba(61, 158, 110, 0.25);
+          border: 1px solid var(--color-success-border);
         }
 
         .td-image-no {
@@ -349,8 +349,8 @@ export default async function AdminPersonsPage() {
 
         .btn-delete:hover {
           color: var(--color-danger);
-          background-color: rgba(192, 57, 43, 0.07);
-          border-color: rgba(192, 57, 43, 0.25);
+          background-color: var(--color-danger-subtle);
+          border-color: var(--color-danger-border);
         }
 
         /* Tom-tilstand */
