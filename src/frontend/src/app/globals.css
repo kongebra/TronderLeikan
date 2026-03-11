@@ -1,26 +1,353 @@
 @import "tailwindcss";
 
+/* ============================================================
+   FARGESYSTEM — mørkt tema som standard
+   Inspirert av Trøndelags høstlandskap: dyp skifer, varm rav og
+   kald stål. Dominante mørke flater med skarpe aksenter.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primærflater */
+  --color-bg-base:     #0c0d10;   /* dypeste bakgrunn */
+  --color-bg-elevated: #13151b;   /* kortflate, panel */
+  --color-bg-overlay:  #1a1d26;   /* hover-tilstand, modal */
+
+  /* Rammer og skillelinjer */
+  --color-border:      #232635;
+  --color-border-subtle: #1c1f2d;
+
+  /* Tekst */
+  --color-text-primary:   #e8eaf0;   /* overskrifter og primærtekst */
+  --color-text-secondary: #8b90a8;   /* brødtekst, sekundær info */
+  --color-text-muted:     #4d5268;   /* plassholdere, deaktivert */
+
+  /* Aksenter — varm rav/gull */
+  --color-accent:        #d4972a;    /* primæraksent */
+  --color-accent-glow:   #d4972a33; /* glød-skygge */
+  --color-accent-subtle: #d4972a18; /* svak bakgrunn-tint */
+
+  /* Medaljefarger — gull, sølv, bronse for scoreboard */
+  --color-gold:          #d4972a;
+  --color-gold-subtle:   rgba(212, 151, 42, 0.13);
+  --color-gold-border:   rgba(212, 151, 42, 0.33);
+  --color-silver:        #c0c8d8;
+  --color-silver-subtle: rgba(192, 200, 216, 0.13);
+  --color-silver-border: rgba(192, 200, 216, 0.27);
+  --color-bronze:        #b86222;
+  --color-bronze-subtle: rgba(184, 98, 34, 0.13);
+  --color-bronze-border: rgba(184, 98, 34, 0.27);
+
+  /* Semantiske farger */
+  --color-success:        #3d9e6e;
+  --color-success-subtle: rgba(61, 158, 110, 0.12);
+  --color-success-border: rgba(61, 158, 110, 0.25);
+  --color-danger:         #c0392b;
+  --color-danger-subtle:  rgba(192, 57, 43, 0.07);
+  --color-danger-border:  rgba(192, 57, 43, 0.25);
+  --color-info:           #3a7bd5;
+
+  /* Tekst på aksent-bakgrunn */
+  --color-on-accent: #0c0d10;
+
+  /* Typografi */
+  --font-sans: var(--font-sora), "Sora", system-ui, sans-serif;
+
+  /* Rytme og spacing */
+  --header-height: 4rem;
+  --content-max-width: 72rem;
+  --content-padding: 1.5rem;
+
+  /* Animasjon */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
 }
+
+/* ============================================================
+   TAILWIND TEMA-INTEGRASJON
+   ============================================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-bg-base);
+  --color-foreground: var(--color-text-primary);
+  --font-sans: var(--font-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================================
+   RESET OG BASE
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Alltid mørkt tema — ingen system-preference override */
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100dvh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Fokussynlighet for tastaturnavigasjon */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   STØY-OVERLAY — subtil tekstureffekt over hele siden
+   ============================================================ */
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+/* ============================================================
+   TOPPTEKST (HEADER)
+   ============================================================ */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-height);
+  background-color: color-mix(in oklch, var(--color-bg-base) 85%, transparent);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+.header-inner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--content-padding);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+/* Logomerkevare */
+.site-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  transition: color 0.2s var(--ease-out-expo);
+}
+
+.site-logo:hover {
+  color: var(--color-accent);
+}
+
+.logo-mark {
+  font-size: 1.25rem;
+  color: var(--color-accent);
+  line-height: 1;
+  /* Liten rotasjonsanimasjon ved hover på logoen */
+  transition: transform 0.4s var(--ease-out-expo);
+  display: inline-block;
+}
+
+.site-logo:hover .logo-mark {
+  transform: rotate(30deg);
+}
+
+.logo-text {
+  /* Trønderleikan-logotekst med norsk æstetikk */
+}
+
+/* Navigasjon */
+.site-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.01em;
+  transition:
+    color 0.2s var(--ease-out-expo),
+    background-color 0.2s var(--ease-out-expo);
+  position: relative;
+}
+
+.nav-link::after {
+  /* Understreksindikator for aktiv lenke */
+  content: "";
+  position: absolute;
+  bottom: 0.125rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 1px;
+  background-color: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease-out-expo);
+}
+
+.nav-link:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-overlay);
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   AKSENT-SKILLELINJE UNDER HEADER
+   ============================================================ */
+
+.header-rule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-border) 20%,
+    var(--color-accent) 50%,
+    var(--color-border) 80%,
+    transparent 100%
+  );
+  position: sticky;
+  top: var(--header-height);
+  z-index: 49;
+}
+
+/* ============================================================
+   HOVED-INNHOLD
+   ============================================================ */
+
+.site-main {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100dvh - var(--header-height) - 1px - 4rem);
+}
+
+/* ============================================================
+   BUNNTEKST (FOOTER)
+   ============================================================ */
+
+.site-footer {
+  border-top: 1px solid var(--color-border-subtle);
+  padding: 1.25rem var(--content-padding);
+}
+
+.footer-inner {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.footer-brand {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.footer-divider {
+  color: var(--color-border);
+}
+
+/* ============================================================
+   NYTTIGE HJELPEKLASSER (gjenbrukbare på tvers av sider)
+   ============================================================ */
+
+/* Sentrert innholdsbredde */
+.container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: 0 var(--content-padding);
+}
+
+/* Seksjonsavstand */
+.section {
+  padding-block: 3rem;
+}
+
+/* Kortkomponent */
+.card {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: border-color 0.2s var(--ease-out-expo);
+}
+
+.card:hover {
+  border-color: var(--color-accent);
+}
+
+/* Aksent-badge */
+.badge-accent {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-glow);
+}
+
+/* Inngangstransisjon for sideinnhold */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.45s var(--ease-out-expo) both;
 }
